@@ -12,8 +12,8 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { IncomeState, ExpenseItem, AssetItem, Language } from './types';
 import { INITIAL_EXPENSES, TRANSLATIONS } from './constants';
-import { 
-  Moon, Sun, Monitor, Save, Trash2, LayoutDashboard, Database, 
+import {
+  Moon, Sun, Monitor, Save, Trash2, LayoutDashboard, Database,
   Globe, CheckCircle, Loader2, GitCompare, X
 } from 'lucide-react';
 
@@ -55,7 +55,7 @@ const App: React.FC = () => {
   const [assets, setAssets] = useState<AssetItem[]>([]);
   const [routineExpenses, setRoutineExpenses] = useState<ExpenseItem[]>(INITIAL_EXPENSES);
   const [masterPeriods, setMasterPeriods] = useState<Record<string, PeriodRecord>>({});
-  
+
   const [localDraft, setLocalDraft] = useState<{
     income: IncomeState;
     expenses: ExpenseItem[];
@@ -70,7 +70,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     const savedTheme = localStorage.getItem(THEME_KEY) as Theme;
     const savedLang = localStorage.getItem(LANG_KEY) as Language;
-    
+
     if (saved) {
       try {
         const parsed: PersistedStorage = JSON.parse(saved);
@@ -114,29 +114,29 @@ const App: React.FC = () => {
       income: periodData.income,
       expenses: combinedExpenses
     });
-    
+
     setTimeout(() => {
       isPeriodSwitching.current = false;
     }, 100);
   }, [selectedPeriod, isLoaded, masterPeriods, routineExpenses]);
 
   const performSave = useCallback((
-    currentDraft: typeof localDraft, 
-    currentAssets: AssetItem[], 
+    currentDraft: typeof localDraft,
+    currentAssets: AssetItem[],
     currentPeriods: typeof masterPeriods
   ) => {
     setIsSaving(true);
-    
+
     const newRoutineExpenses = currentDraft.expenses.filter(e => e.isRoutine);
     const newTemporaryExpenses = currentDraft.expenses.filter(e => !e.isRoutine);
     const routinePaidStatus: Record<string, boolean> = {};
-    
+
     newRoutineExpenses.forEach(re => {
       routinePaidStatus[re.id] = re.isPaid;
     });
 
     const updatedGlobalRoutines = newRoutineExpenses.map(re => ({ ...re, isPaid: false }));
-    
+
     const newPeriodRecord: PeriodRecord = {
       income: currentDraft.income,
       temporaryExpenses: newTemporaryExpenses,
@@ -144,15 +144,15 @@ const App: React.FC = () => {
     };
 
     const newMasterPeriods = { ...currentPeriods, [selectedPeriod]: newPeriodRecord };
-    
+
     const storageObj: PersistedStorage = {
       assets: currentAssets,
       routineExpenses: updatedGlobalRoutines,
       periods: newMasterPeriods
     };
-    
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storageObj));
-    
+
     setMasterPeriods(newMasterPeriods);
     setRoutineExpenses(updatedGlobalRoutines);
 
@@ -166,7 +166,7 @@ const App: React.FC = () => {
       temporaryExpenses: [],
       routinePaidStatus: {}
     };
-    
+
     const savedCombined = [
       ...routineExpenses.map(re => ({
         ...re,
@@ -177,7 +177,7 @@ const App: React.FC = () => {
 
     const incomeDirty = JSON.stringify(localDraft.income) !== JSON.stringify(periodData.income);
     const expensesDirty = JSON.stringify(localDraft.expenses) !== JSON.stringify(savedCombined);
-    
+
     return incomeDirty || expensesDirty;
   }, [localDraft, masterPeriods, selectedPeriod, routineExpenses, isLoaded]);
 
@@ -200,13 +200,13 @@ const App: React.FC = () => {
     localStorage.setItem(LANG_KEY, language);
   }, [language]);
 
-  const totalIncome = useMemo(() => 
+  const totalIncome = useMemo(() =>
     (Object.values(localDraft.income) as number[]).reduce((acc, curr) => acc + curr, 0)
-  , [localDraft.income]);
+    , [localDraft.income]);
 
-  const totalExpenses = useMemo(() => 
+  const totalExpenses = useMemo(() =>
     localDraft.expenses.reduce((sum, item) => sum + item.amount, 0)
-  , [localDraft.expenses]);
+    , [localDraft.expenses]);
 
   const balance = totalIncome - totalExpenses;
 
@@ -215,7 +215,7 @@ const App: React.FC = () => {
     const currentIndex = periodKeys.indexOf(selectedPeriod);
     const prevKey = periodKeys[currentIndex + 1];
     if (!prevKey) return [];
-    
+
     const prevRecord = masterPeriods[prevKey];
     return [
       ...routineExpenses.map(re => ({
@@ -253,10 +253,10 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <PeriodSelector 
-              selectedPeriod={selectedPeriod} 
-              onPeriodChange={setSelectedPeriod} 
-              hasUnsavedChanges={false} 
+            <PeriodSelector
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+              hasUnsavedChanges={false}
               language={language}
             />
 
@@ -312,8 +312,8 @@ const App: React.FC = () => {
                   <span>{language === 'en' ? 'Saving...' : 'Menyimpan...'}</span>
                 </div>
               ) : hasUnsavedChanges ? (
-                <Button 
-                  onClick={() => performSave(localDraft, assets, masterPeriods)} 
+                <Button
+                  onClick={() => performSave(localDraft, assets, masterPeriods)}
                   className="gap-2 rounded-xl px-5 h-9 sm:h-10 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20"
                 >
                   <Save className="h-4 w-4" />
@@ -346,11 +346,11 @@ const App: React.FC = () => {
                     </h2>
                   </div>
                 </div>
-                
+
                 {hasPrevMonth && (
-                  <Button 
-                    variant={isCompareOpen ? 'secondary' : 'outline'} 
-                    size="sm" 
+                  <Button
+                    variant={isCompareOpen ? 'secondary' : 'outline'}
+                    size="sm"
                     onClick={() => setIsCompareOpen(!isCompareOpen)}
                     className="gap-2 rounded-xl px-5 border-2 font-bold transition-all active:scale-[0.98]"
                   >
@@ -362,9 +362,9 @@ const App: React.FC = () => {
               <div className="flex items-start sm:items-end gap-6 flex-wrap md:flex-nowrap shrink-0 mt-4 md:mt-0">
                 <div className="flex flex-col items-start md:items-end space-y-1">
                   <span className="text-xs font-bold text-muted-foreground opacity-60">{t.income}</span>
-                  <div className="flex items-baseline gap-1 text-money">
+                  <div className="flex items-baseline gap-1 text-money tracking-tighter">
                     <span className="text-[10px] font-bold opacity-40">Rp</span>
-                    <span className="text-xl sm:text-2xl font-bold">
+                    <span className="text-xl sm:text-2xl font-extrabold">
                       {totalIncome.toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -372,9 +372,9 @@ const App: React.FC = () => {
                 <div className="hidden md:block h-12 w-[1px] bg-border/40" />
                 <div className="flex flex-col items-start md:items-end space-y-1">
                   <span className="text-xs font-bold text-muted-foreground opacity-60">{t.expenses}</span>
-                  <div className="flex items-baseline gap-1 text-money">
+                  <div className="flex items-baseline gap-1 text-money tracking-tighter">
                     <span className="text-[10px] font-bold opacity-40">Rp</span>
-                    <span className="text-xl sm:text-2xl font-bold">
+                    <span className="text-xl sm:text-2xl font-extrabold">
                       {totalExpenses.toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -384,22 +384,22 @@ const App: React.FC = () => {
           </Card>
           {totalIncome > 0 && (
             <div className="h-full min-h-[350px]">
-              <AISuggestions 
-                income={localDraft.income} 
-                expenses={localDraft.expenses} 
-                assets={assets} 
-                selectedPeriod={selectedPeriod} 
-                language={language} 
+              <AISuggestions
+                income={localDraft.income}
+                expenses={localDraft.expenses}
+                assets={assets}
+                selectedPeriod={selectedPeriod}
+                language={language}
               />
             </div>
           )}
         </div>
 
         {isCompareOpen && (
-          <ComparisonDiff 
-            currentExpenses={localDraft.expenses} 
-            previousExpenses={previousMonthExpenses} 
-            language={language} 
+          <ComparisonDiff
+            currentExpenses={localDraft.expenses}
+            previousExpenses={previousMonthExpenses}
+            language={language}
           />
         )}
 
@@ -420,9 +420,9 @@ const App: React.FC = () => {
               <p className="text-xs text-muted-foreground font-medium">{t.globalRoutineActive}</p>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-muted-foreground hover:text-destructive gap-2 rounded-xl hover:bg-destructive/5 font-bold"
                 onClick={() => {
                   if (confirm(t.resetConfirm)) {
@@ -434,7 +434,7 @@ const App: React.FC = () => {
                 <Trash2 className="h-4 w-4" /> {t.resetApp}
               </Button>
               <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-bold text-secondary-foreground shadow-sm">
-                <Database className="h-3.5 w-3.5 opacity-60" /> 
+                <Database className="h-3.5 w-3.5 opacity-60" />
                 <span>v1.2.1 • Multi-Lang</span>
               </div>
             </div>
