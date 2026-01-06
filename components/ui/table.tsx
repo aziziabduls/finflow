@@ -9,8 +9,8 @@ function cn(...inputs: ClassValue[]) {
 
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+    <div className="relative w-full overflow-x-auto">
+      <table ref={ref} className={cn('w-full caption-bottom text-sm min-w-[600px] sm:min-w-full', className)} {...props} />
     </div>
   )
 );

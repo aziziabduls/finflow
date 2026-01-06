@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from './ui/badge';
 import { ResponsiveDialog } from './ResponsiveDialog';
 import { ExpenseItem, Category, Language } from '../types';
-import { CATEGORY_COLORS, TRANSLATIONS } from '../constants';
+import { TRANSLATIONS, getCategoryColor } from '../constants';
 import { Plus, Trash2, CheckCircle2, PencilLine, RefreshCcw, Zap } from 'lucide-react';
 
 interface ExpenseSectionProps {
@@ -24,7 +24,7 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [category, setCategory] = useState<Category>(Category.DailyExpenses);
+  const [category, setCategory] = useState<string>(Category.DailyExpenses);
   const [isRoutine, setIsRoutine] = useState(true);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
   };
 
   const handleSave = () => {
-    if (!name || !amount) return;
+    if (!name || !amount || !category) return;
     const numericAmount = parseInt(amount.replace(/[^0-9]/g, ''), 10) || 0;
 
     if (editingItem) {
@@ -60,7 +60,7 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
         name,
         amount: numericAmount,
         note,
-        category,
+        category: category.trim(),
         isRoutine
       } : e));
     } else {
@@ -68,7 +68,7 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
         id: Math.random().toString(36).substr(2, 9),
         name,
         amount: numericAmount,
-        category,
+        category: category.trim(),
         isPaid: false,
         note,
         isRoutine
@@ -82,17 +82,20 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
   const onTogglePaid = (id: string) => 
     setExpenses(expenses.map(e => e.id === id ? { ...e, isPaid: !e.isPaid } : e));
 
+  const routineCount = expenses.filter(e => e.isRoutine).length;
+
+  const quickCategories = Object.values(Category);
+
   return (
-    <section className="space-y-6">
-      <div className="flex justify-between items-center px-2">
+    <section className="space-y-8 w-full max-w-7xl mx-auto">
+      <div className="flex justify-between items-end px-2">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter">{t.allocations}</h2>
-          <p className="text-sm text-muted-foreground font-medium">
-            {expenses.filter(e => e.isRoutine).length} {t.routineItems}
+          <h2 className="text-3xl font-black tracking-tighter text-foreground">{t.allocations}</h2>
+          <p className="text-muted-foreground text-sm mt-1 font-bold opacity-80 tracking-tight">
+            {routineCount} {t.routineItems}
           </p>
         </div>
-        
-        <Button size="sm" onClick={() => { setEditingItem(null); setIsOpen(true); }} className="gap-2 rounded-xl h-10 px-6 font-bold">
+        <Button size="sm" onClick={() => { setEditingItem(null); setIsOpen(true); }} className="gap-2 rounded-xl h-10 px-6 font-bold shadow-sm">
           <Plus className="h-4 w-4" /> {t.newEntry}
         </Button>
       </div>
@@ -142,13 +145,19 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold opacity-60 ml-1">{t.category}</label>
+            <Input 
+              value={category} 
+              onChange={(e) => setCategory(e.target.value)} 
+              placeholder={t.customCategory}
+              className="h-12 rounded-xl border-2 focus:border-primary transition-all mb-3" 
+            />
             <div className="grid grid-cols-2 gap-2">
-              {Object.values(Category).map(cat => (
+              {quickCategories.map(cat => (
                 <Button 
                   key={cat} 
                   type="button"
                   variant={category === cat ? 'default' : 'outline'}
-                  className="text-xs font-bold h-10 rounded-xl"
+                  className="text-[10px] font-bold h-9 rounded-xl overflow-hidden text-ellipsis whitespace-nowrap"
                   onClick={() => setCategory(cat)}
                 >
                   {cat}
@@ -166,95 +175,97 @@ export const ExpenseSection: React.FC<ExpenseSectionProps> = ({ expenses, setExp
         </div>
       </ResponsiveDialog>
 
-      <Card className="border-none shadow-sm ring-1 ring-border rounded-2xl overflow-hidden">
+      <Card className="rounded-[2rem] border border-border shadow-sm overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/30">
-              <TableRow className="border-none">
-                <TableHead className="w-[80px] text-center font-bold text-xs">{t.paid}</TableHead>
-                <TableHead className="font-bold text-xs">{t.item}</TableHead>
-                <TableHead className="hidden md:table-cell font-bold text-xs">{t.type}</TableHead>
-                <TableHead className="text-right font-bold text-xs">{t.amount}</TableHead>
-                <TableHead className="w-[120px] text-right font-bold text-xs pr-8">{t.actions}</TableHead>
+            <TableHeader className="bg-muted/10">
+              <TableRow className="hover:bg-transparent border-b">
+                <TableHead className="w-[80px] text-center font-bold text-[12px] tracking-tight px-8 h-16">{t.paid}</TableHead>
+                <TableHead className="font-bold text-[12px] tracking-tight px-8 h-16">{t.item}</TableHead>
+                <TableHead className="font-bold text-[12px] tracking-tight px-8 h-16">{t.category}</TableHead>
+                <TableHead className="font-bold text-[12px] tracking-tight px-8 h-16">{t.type}</TableHead>
+                <TableHead className="text-right font-bold text-[12px] tracking-tight px-8 h-16">{t.amount}</TableHead>
+                <TableHead className="w-[120px] text-right font-bold text-[12px] tracking-tight px-8 h-16">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {expenses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground font-bold italic opacity-60">
+                  <TableCell colSpan={6} className="h-40 text-center text-muted-foreground font-bold italic opacity-60">
                     {t.noEntries}
                   </TableCell>
                 </TableRow>
               ) : (
-                expenses.map((item) => (
-                  <TableRow key={item.id} className={`${item.isPaid ? 'opacity-40 grayscale-[0.5]' : ''} ${item.isRoutine ? 'bg-primary/[0.02]' : ''} border-b last:border-none transition-all group`}>
-                    <TableCell className="text-center">
-                      <button
-                        onClick={() => onTogglePaid(item.id)}
-                        className={`mx-auto flex h-7 w-7 items-center justify-center rounded-xl border-2 transition-all ${
-                          item.isPaid ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-background border-input hover:border-primary/50'
-                        }`}
-                      >
-                        {item.isPaid && <CheckCircle2 className="h-4 w-4" />}
-                      </button>
-                    </TableCell>
-                    <TableCell className="py-5">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-bold text-[15px] ${item.isPaid ? 'line-through decoration-2' : ''}`}>
-                            {item.name}
+                expenses.map((item) => {
+                  const catColor = getCategoryColor(item.category);
+                  return (
+                    <TableRow key={item.id} className={`${item.isPaid ? 'opacity-40 grayscale-[0.5]' : ''} ${item.isRoutine ? 'bg-primary/[0.01]' : ''} border-b last:border-none transition-all group`}>
+                      <TableCell className="text-center px-8 py-6">
+                        <button
+                          onClick={() => onTogglePaid(item.id)}
+                          className={`mx-auto flex h-7 w-7 items-center justify-center rounded-xl border-2 transition-all ${
+                            item.isPaid ? 'bg-primary border-primary text-primary-foreground' : 'bg-background border-input hover:border-primary/50'
+                          }`}
+                        >
+                          {item.isPaid && <CheckCircle2 className="h-4 w-4" />}
+                        </button>
+                      </TableCell>
+                      <TableCell className="px-8 py-6">
+                        <span className={`font-bold text-[16px] ${item.isPaid ? 'line-through decoration-1' : ''}`}>
+                          {item.name}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-8 py-6">
+                        <Badge 
+                          variant="outline" 
+                          className="w-fit text-[11px] font-bold py-1 px-3 rounded-xl whitespace-nowrap" 
+                          style={{ borderColor: `${catColor}30`, color: catColor, backgroundColor: `${catColor}08` }}
+                        >
+                          {item.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-8 py-6">
+                        {item.isRoutine ? (
+                          <div className="flex items-center gap-2 text-[12px] font-bold text-primary/60">
+                            <RefreshCcw className="h-3.5 w-3.5" /> {t.routine}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-[12px] font-bold text-amber-600/60">
+                            <Zap className="h-3.5 w-3.5" /> {t.oneTime}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right px-8 py-6">
+                        <div className="flex items-baseline justify-end gap-1 text-money">
+                          <span className="text-[10px] font-bold opacity-30">Rp</span>
+                          <span className={`font-black text-[17px] tracking-tighter ${item.isPaid ? 'line-through' : ''}`}>
+                             {item.amount.toLocaleString('id-ID')}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge 
-                            variant="outline" 
-                            className="w-fit text-[9px] font-bold py-0.5 px-2 rounded-lg" 
-                            style={{ borderColor: `${CATEGORY_COLORS[item.category]}40`, color: CATEGORY_COLORS[item.category] }}
+                      </TableCell>
+                      <TableCell className="text-right px-8 py-6">
+                        <div className="flex justify-end gap-1.5">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => { setEditingItem(item); setIsOpen(true); }} 
+                            className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary transition-all hover:bg-primary/5"
                           >
-                            {item.category}
-                          </Badge>
-                          {!item.isRoutine && (
-                             <Badge variant="secondary" className="text-[9px] px-2 py-0.5 font-bold bg-amber-500/10 text-amber-600 border-none rounded-lg">{t.oneTime}</Badge>
-                          )}
+                            <PencilLine className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => onRemove(item.id)} 
+                            className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive transition-all hover:bg-destructive/5"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell py-5">
-                      {item.isRoutine ? (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-primary/60">
-                          <RefreshCcw className="h-3 w-3" /> {t.routine}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600/60">
-                          <Zap className="h-3 w-3" /> {t.oneTime}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-black text-money text-base tracking-tighter py-5">
-                      Rp {item.amount.toLocaleString('id-ID')}
-                    </TableCell>
-                    <TableCell className="text-right py-5 pr-8">
-                      <div className="flex justify-end gap-1.5">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => { setEditingItem(item); setIsOpen(true); }} 
-                          className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary transition-all hover:bg-primary/5"
-                        >
-                          <PencilLine className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => onRemove(item.id)} 
-                          className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive transition-all hover:bg-destructive/5"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

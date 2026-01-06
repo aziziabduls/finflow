@@ -61,17 +61,20 @@ export const AssetSection: React.FC<AssetSectionProps> = ({ assets, setAssets, l
   const totalAssets = assets.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <section className="space-y-6">
-      <div className="flex justify-between items-center px-2">
+    <section className="space-y-8 w-full max-w-7xl mx-auto">
+      <div className="flex justify-between items-end px-2">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter">{t.wealth}</h2>
-          <p className="text-sm text-muted-foreground font-medium">{t.wealthDesc}</p>
+          <h2 className="text-3xl font-black tracking-tighter text-foreground">{t.wealth}</h2>
+          <p className="text-muted-foreground text-sm mt-1 font-bold opacity-80 tracking-tight">{t.wealthDesc}</p>
         </div>
         
         <div className="flex items-center gap-6">
           <div className="hidden sm:block text-right">
-            <p className="text-xs font-bold text-muted-foreground leading-none mb-2">{t.totalValue}</p>
-            <p className="text-2xl font-black text-emerald-600 text-money tracking-tighter">Rp {totalAssets.toLocaleString('id-ID')}</p>
+            <p className="text-xs font-bold text-muted-foreground leading-none mb-1 opacity-70">{t.totalValue}</p>
+            <div className="flex items-baseline justify-end gap-1 text-money">
+              <span className="text-[10px] font-bold text-emerald-600 opacity-40">Rp</span>
+              <p className="text-2xl font-black text-emerald-600 tracking-tighter">{totalAssets.toLocaleString('id-ID')}</p>
+            </div>
           </div>
           
           <Button size="sm" variant="outline" onClick={() => { setEditingItem(null); setIsOpen(true); }} className="gap-2 rounded-xl h-10 px-6 font-bold">
@@ -110,32 +113,37 @@ export const AssetSection: React.FC<AssetSectionProps> = ({ assets, setAssets, l
         </div>
       </ResponsiveDialog>
 
-      <Card className="border-none shadow-sm ring-1 ring-border rounded-2xl overflow-hidden">
+      <Card className="rounded-[2rem] border border-border shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-muted/30">
-              <TableRow className="border-none">
-                <TableHead className="font-bold text-xs px-8">{t.accountName}</TableHead>
-                <TableHead className="text-right font-bold text-xs px-8">{t.balance}</TableHead>
-                <TableHead className="w-[100px] text-right font-bold text-xs px-8">{t.actions}</TableHead>
+            <TableHeader className="bg-muted/10">
+              <TableRow className="hover:bg-transparent border-b">
+                <TableHead className="font-bold text-[12px] tracking-tight px-8 h-16">{t.accountName}</TableHead>
+                <TableHead className="text-right font-bold text-[12px] tracking-tight px-8 h-16">{t.balance}</TableHead>
+                <TableHead className="w-[100px] text-right font-bold text-[12px] tracking-tight px-8 h-16">{t.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-32 text-center text-muted-foreground font-bold italic opacity-60">
+                  <TableCell colSpan={3} className="h-40 text-center text-muted-foreground font-bold italic opacity-60">
                     {t.noAssets}
                   </TableCell>
                 </TableRow>
               ) : (
                 assets.map((item) => (
                   <TableRow key={item.id} className="group transition-colors border-b last:border-none">
-                    <TableCell className="font-bold text-[15px] px-8 py-5">{item.name}</TableCell>
-                    <TableCell className="text-right font-black text-emerald-600 text-money text-lg px-8 py-5 tracking-tighter">
-                      Rp {item.amount.toLocaleString('id-ID')}
+                    <TableCell className="font-bold text-[15px] px-8 py-6">{item.name}</TableCell>
+                    <TableCell className="text-right px-8 py-6">
+                      <div className="flex items-baseline justify-end gap-1 text-money">
+                        <span className="text-[10px] font-bold text-emerald-600 opacity-30">Rp</span>
+                        <span className="font-black text-emerald-600 text-[18px] tracking-tighter">
+                          {item.amount.toLocaleString('id-ID')}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right px-8 py-5">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="text-right px-8 py-6">
+                      <div className="flex justify-end gap-1">
                         <Button 
                           variant="ghost" 
                           size="icon" 

@@ -39,26 +39,26 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selectedPeriod, 
   };
 
   return (
-    <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-2xl border border-border/50">
+    <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-2xl border border-border/50 shadow-inner">
       <select
         value={month}
         onChange={(e) => handlePeriodChange(`${year}-${e.target.value}`)}
         className="bg-transparent py-1.5 px-3 text-sm font-bold focus:outline-none cursor-pointer hover:bg-primary/5 rounded-xl transition-colors appearance-none text-center"
       >
         {months.map((m, i) => (
-          <option key={m} value={(i + 1).toString().padStart(2, '0')} className="bg-background text-foreground">
+          <option key={m} value={(i + 1).toString().padStart(2, '0')} className="bg-background text-foreground font-medium">
             {m}
           </option>
         ))}
       </select>
-      <div className="w-[1px] h-3 bg-muted-foreground/30 mx-0.5"></div>
+      <div className="w-[1px] h-3.5 bg-muted-foreground/30 mx-0.5 opacity-50"></div>
       <select
         value={year}
         onChange={(e) => handlePeriodChange(`${e.target.value}-${month}`)}
         className="bg-transparent py-1.5 px-3 text-sm font-bold focus:outline-none cursor-pointer hover:bg-primary/5 rounded-xl transition-colors appearance-none text-center"
       >
         {years.map((y) => (
-          <option key={y} value={y.toString()} className="bg-background text-foreground">
+          <option key={y} value={y.toString()} className="bg-background text-foreground font-medium">
             {y}
           </option>
         ))}

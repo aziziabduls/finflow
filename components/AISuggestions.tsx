@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { IncomeState, ExpenseItem, AssetItem, Language } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { Sparkles, BrainCircuit, Loader2 } from 'lucide-react';
+import { Sparkles, BrainCircuit, Loader2, AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,18 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const generateAdvice = async () => {
+    if (!process.env.API_KEY) {
+      console.error("API Key is missing from environment.");
+      setError(language === 'en' ? "Service unavailable: API Key missing." : "Layanan tidak tersedia: API Key hilang.");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+    
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const totalIncome = Object.values(income).reduce((a, b) => a + b, 0);
@@ -59,6 +68,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
         MANDATORY: Provide the entire response in ${language === 'en' ? 'English' : 'Bahasa Indonesia'}.
         Use Markdown for formatting. 
         IMPORTANT: Use **bold** text for emphasis on key numbers or insights. 
+        Formatting rule: Ensure all headings and sub-headings use "Title Case" (Only First Letters Capitalized). 
         Do not use generic advice; be specific to the numbers provided.
       `;
 
@@ -70,9 +80,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
       const text = response.text || "Failed to generate advice.";
       setSuggestion(text);
       setIsDialogOpen(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Generation Error:", error);
-      alert(language === 'en' ? "Financial insights temporarily unavailable." : "Wawasan keuangan sementara tidak tersedia.");
+      setError(language === 'en' ? "Financial insights temporarily unavailable." : "Wawasan keuangan sementara tidak tersedia.");
     } finally {
       setLoading(false);
     }
@@ -102,7 +112,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
         if (!content || content === '--') return null;
         return (
           <div key={i} className="flex gap-3 mb-3 items-start pl-2">
-            <div className="mt-2 h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
+            <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
             <span className="text-[15px] leading-relaxed text-foreground/90">{parseInlineStyles(content)}</span>
           </div>
         );
@@ -126,39 +136,46 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
 
   return (
     <>
-      <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5 ring-1 ring-inset ring-foreground/5 h-full flex flex-col justify-center rounded-[2rem]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl text-primary">
+      <Card className="rounded-[2rem] bg-gradient-to-br from-indigo-500/[0.08] via-background to-emerald-500/[0.08] flex flex-col justify-center border-border shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-8 pt-8">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-primary/10 rounded-2xl text-primary shadow-sm">
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle className="text-sm font-bold tracking-tight">{t.analysis}</CardTitle>
-              <p className="text-xs text-muted-foreground font-bold">{t.analysisSub}</p>
+              <CardTitle className="text-base font-bold tracking-tight">{t.analysis}</CardTitle>
+              <p className="text-xs text-muted-foreground font-semibold opacity-70">{t.analysisSub}</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4 flex flex-col items-center text-center">
-          <div className="mb-6 space-y-2">
-            <p className="text-sm font-bold">{language === 'en' ? 'Personalized Financial Audit' : 'Audit Keuangan Personal'}</p>
-            <p className="text-xs text-muted-foreground max-w-[220px] font-medium leading-relaxed">
+        <CardContent className="pt-6 flex flex-col items-center text-center px-8 pb-8">
+          <div className="mb-8 space-y-3">
+            <p className="text-base font-bold">{language === 'en' ? 'Personalized Financial Audit' : 'Audit Keuangan Personal'}</p>
+            <p className="text-sm text-muted-foreground max-w-[240px] font-medium leading-relaxed opacity-80">
               {t.analysisDesc}
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 flex items-center gap-2 text-xs font-bold text-destructive bg-destructive/5 px-4 py-2.5 rounded-xl border border-destructive/10">
+              <AlertCircle className="h-3.5 w-3.5" />
+              {error}
+            </div>
+          )}
+
           <Button 
             onClick={suggestion ? () => setIsDialogOpen(true) : generateAdvice} 
             disabled={loading}
-            className="w-full rounded-2xl bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20 h-12 font-bold"
+            className="w-full rounded-[1.25rem] bg-primary hover:bg-primary/90 gap-2 shadow-xl shadow-primary/10 h-14 font-bold text-base transition-all active:scale-[0.98]"
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {language === 'en' ? 'Processing...' : 'Memproses...'}
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {language === 'en' ? 'Analyzing...' : 'Menganalisis...'}
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-5 w-5" />
                 {suggestion ? t.viewAnalysis : t.analyzeBtn}
               </>
             )}
@@ -167,7 +184,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
           {suggestion && !loading && (
             <button 
               onClick={generateAdvice}
-              className="mt-4 text-xs text-muted-foreground hover:text-primary underline underline-offset-4 font-bold transition-colors"
+              className="mt-5 text-xs text-muted-foreground hover:text-primary underline underline-offset-4 font-bold transition-colors opacity-70 hover:opacity-100"
             >
               {t.refreshAnalysis}
             </button>
@@ -176,46 +193,44 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl bg-background rounded-[2rem]">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-          
-          <DialogHeader className="p-8 border-b bg-muted/20 relative">
-            <div className="flex items-center gap-4 mb-1">
-              <div className="p-2.5 bg-primary rounded-2xl text-primary-foreground shadow-lg shadow-primary/20">
-                <BrainCircuit className="h-6 w-6" />
+        <DialogContent className="sm:max-w-[750px] max-h-[92vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl bg-background rounded-[2.5rem]">
+          <DialogHeader className="p-10 border-b bg-muted/10 relative">
+            <div className="flex items-center gap-5 mb-1">
+              <div className="p-3 bg-primary rounded-2xl text-primary-foreground shadow-2xl shadow-primary/20">
+                <BrainCircuit className="h-7 w-7" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight">{t.strategyTitle}</DialogTitle>
-                <DialogDescription className="text-sm font-bold opacity-60 mt-0.5">
+                <DialogTitle className="text-2xl font-black tracking-tight leading-none mb-1.5">{t.strategyTitle}</DialogTitle>
+                <DialogDescription className="text-sm font-bold opacity-50">
                   {t.auditFor} {selectedPeriod}
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative z-10 bg-card/30">
-            <div className="max-w-none mx-auto bg-white dark:bg-zinc-900/50 p-8 rounded-[2rem] border border-border shadow-inner">
+          <div className="flex-1 overflow-y-auto p-8 sm:p-12 relative z-10 bg-card/30">
+            <div className="max-w-none mx-auto bg-white dark:bg-zinc-900/40 p-10 rounded-[2rem] border border-border/50 shadow-inner ring-1 ring-black/5">
               {suggestion && renderMarkdown(suggestion)}
             </div>
 
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="p-6 rounded-[1.5rem] border bg-emerald-500/[0.03] border-emerald-500/10 transition-all hover:bg-emerald-500/[0.06]">
-                <p className="text-xs font-bold text-emerald-600 mb-2">{language === 'en' ? 'Wealth Health' : 'Kesehatan Aset'}</p>
-                <p className="text-sm text-emerald-900/80 leading-relaxed font-bold">{language === 'en' ? 'Current distribution shows active movement towards long-term goals.' : 'Distribusi saat ini menunjukkan pergerakan aktif menuju tujuan jangka panjang.'}</p>
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="p-8 rounded-[2rem] border bg-emerald-500/[0.04] border-emerald-500/10 transition-all hover:bg-emerald-500/[0.07] group">
+                <p className="text-xs font-bold text-emerald-600 mb-3 opacity-70 group-hover:opacity-100 transition-opacity">{language === 'en' ? 'Wealth Health' : 'Kesehatan Aset'}</p>
+                <p className="text-sm text-emerald-950/80 leading-relaxed font-bold">{language === 'en' ? 'Current distribution shows active movement towards long-term goals.' : 'Distribusi saat ini menunjukkan pergerakan aktif menuju tujuan jangka panjang.'}</p>
               </div>
-              <div className="p-6 rounded-[1.5rem] border bg-indigo-500/[0.03] border-indigo-500/10 transition-all hover:bg-indigo-500/[0.06]">
-                <p className="text-xs font-bold text-indigo-600 mb-2">{language === 'en' ? 'Strategic Goal' : 'Target Strategis'}</p>
-                <p className="text-sm text-indigo-900/80 leading-relaxed font-bold">{language === 'en' ? 'Prioritize unallocated balance for emergency liquidity building.' : 'Prioritaskan saldo yang belum teralokasi untuk membangun likuiditas darurat.'}</p>
+              <div className="p-8 rounded-[2rem] border bg-indigo-500/[0.04] border-indigo-500/10 transition-all hover:bg-indigo-500/[0.07] group">
+                <p className="text-xs font-bold text-indigo-600 mb-3 opacity-70 group-hover:opacity-100 transition-opacity">{language === 'en' ? 'Strategic Goal' : 'Target Strategis'}</p>
+                <p className="text-sm text-indigo-950/80 leading-relaxed font-bold">{language === 'en' ? 'Prioritize unallocated balance for emergency liquidity building.' : 'Prioritaskan saldo yang belum teralokasi untuk membangun likuiditas darurat.'}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-6 border-t bg-muted/30 flex justify-end gap-3 backdrop-blur-md">
-             <Button variant="outline" size="lg" onClick={() => setIsDialogOpen(false)} className="rounded-xl px-8 h-12 font-bold">
+          <div className="p-8 border-t bg-muted/30 flex flex-col sm:flex-row justify-end gap-4 backdrop-blur-md">
+             <Button variant="outline" size="lg" onClick={() => setIsDialogOpen(false)} className="rounded-2xl px-10 h-14 font-bold border-2">
                {t.closeAudit}
              </Button>
-             <Button size="lg" onClick={generateAdvice} className="rounded-xl px-8 h-12 gap-2 font-black shadow-xl shadow-primary/10">
-               <Sparkles className="h-4 w-4" />
+             <Button size="lg" onClick={generateAdvice} className="rounded-2xl px-10 h-14 gap-2 font-black shadow-2xl shadow-primary/10 transition-all active:scale-[0.98]">
+               <Sparkles className="h-5 w-5" />
                {t.reRunAudit}
              </Button>
           </div>

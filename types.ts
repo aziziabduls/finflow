@@ -20,7 +20,7 @@ export interface ExpenseItem {
   id: string;
   name: string;
   amount: number;
-  category: Category;
+  category: string;
   isPaid: boolean;
   note: string;
   isRoutine: boolean;
