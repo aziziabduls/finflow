@@ -12,7 +12,10 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { IncomeState, ExpenseItem, AssetItem, Language } from './types';
 import { INITIAL_EXPENSES, TRANSLATIONS } from './constants';
-import { Moon, Sun, Monitor, Save, Trash2, LayoutDashboard, Database, Globe, CheckCircle, Loader2, GitCompare, X } from 'lucide-react';
+import { 
+  Moon, Sun, Monitor, Save, Trash2, LayoutDashboard, Database, 
+  Globe, CheckCircle, Loader2, GitCompare, X
+} from 'lucide-react';
 
 const STORAGE_KEY = 'finflow_v1_data_master_v2';
 const THEME_KEY = 'finflow_v1_theme_master';
@@ -381,7 +384,13 @@ const App: React.FC = () => {
           </Card>
           {totalIncome > 0 && (
             <div className="h-full min-h-[350px]">
-              <AISuggestions income={localDraft.income} expenses={localDraft.expenses} assets={assets} selectedPeriod={selectedPeriod} language={language} />
+              <AISuggestions 
+                income={localDraft.income} 
+                expenses={localDraft.expenses} 
+                assets={assets} 
+                selectedPeriod={selectedPeriod} 
+                language={language} 
+              />
             </div>
           )}
         </div>
