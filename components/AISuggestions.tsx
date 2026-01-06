@@ -41,7 +41,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ income, expenses, 
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const totalIncome = Object.values(income).reduce((a, b) => a + b, 0);
+      const totalIncome = (Object.values(income) as number[]).reduce((a, b) => a + b, 0);
       const totalExpenses = expenses.reduce((a, b) => a + b.amount, 0);
       const totalAssets = assets.reduce((a, b) => a + b.amount, 0);
 
